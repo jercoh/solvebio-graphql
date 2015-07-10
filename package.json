@@ -4,8 +4,8 @@
   "description": "GraphQL server with Mongoose (MongoDB) and Node.js",
   "main": "index.js",
   "scripts": {
-    "start": "node src/server/index.js",
-    "client": "node src/client/index.js",
+    "start": "node --harmony --use_strict --harmony_generators src/server/index.js",
+    "client": "node --harmony --use_strict --harmony_generators src/client/index.js",
     "test": "NODE_ENV=test mocha --compilers js:babel/register --require co-mocha $(find src -name \"*.spec.js\")"
   },
   "author": "RisingStack",

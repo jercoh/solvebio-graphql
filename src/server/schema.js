@@ -6,49 +6,14 @@ import {
   GraphQLList
 } from 'graphql/lib/type';
 
-import co from 'co';
-import User from './user';
+import {
+  depositoryType,
+  depositoryVersionType,
+  geneModuleType
+} from './types';
 
-/**
- * generate projection object for mongoose
- * @param  {Object} fieldASTs
- * @return {Project}
- */
-function getProjection (fieldASTs) {
-  return fieldASTs.selectionSet.selections.reduce((projections, selection) => {
-    projections[selection.name.value] = 1;
-
-    return projections;
-  }, {});
-}
-
-var userType = new GraphQLObjectType({
-  name: 'User',
-  description: 'User creator',
-  fields: () => ({
-    id: {
-      type: new GraphQLNonNull(GraphQLString),
-      description: 'The id of the user.',
-    },
-    name: {
-      type: GraphQLString,
-      description: 'The name of the user.',
-    },
-    friends: {
-      type: new GraphQLList(userType),
-      description: 'The friends of the user, or an empty list if they have none.',
-      resolve: (user, params, source, fieldASTs) => {
-        var projections = getProjection(fieldASTs);
-        return User.find({
-          _id: {
-            // to make it easily testable
-            $in: user.friends.map((id) => id.toString())
-          }
-        }, projections);
-      },
-    }
-  })
-});
+import SolveBio from './solvebio';
+import _ from 'lodash';
 
 var schema = new GraphQLSchema({
   query: new GraphQLObjectType({
@@ -60,55 +25,82 @@ var schema = new GraphQLSchema({
           return 'world';
         }
       },
-      user: {
-        type: userType,
+      depository: {
+        type: depositoryType,
         args: {
           id: {
             name: 'id',
             type: new GraphQLNonNull(GraphQLString)
           }
         },
-        resolve: (root, {id}, source, fieldASTs) => {
-          var projections = getProjection(fieldASTs);
-          return User.findById(id, projections);
+        resolve: (root, {id}) => {
+          return SolveBio.Depository(id).retrieve();
+        }
+      },
+      version: {
+        type: depositoryVersionType,
+        args: {
+          id: {
+            name: 'id',
+            type: new GraphQLNonNull(GraphQLString)
+          }
+        },
+        resolve: (root, {id}) => {
+          return SolveBio.DepositoryVersion(id).retrieve();
+        }
+      },
+      geneModule: {
+        type: geneModuleType,
+        args: {
+          start: {
+            name: 'start',
+            type: new GraphQLNonNull(GraphQLString)
+          },
+          stop: {
+            name: 'stop',
+            type: new GraphQLNonNull(GraphQLString)
+          },
+          chromosome: {
+            name: 'chromosome',
+            type: new GraphQLNonNull(GraphQLString)
+          }
+        },
+        resolve: (root, {start, stop, chromosome}) => {
+          var region = getRegion(start, stop);
+          return SolveBio.Dataset('GENCODE/1.1.0-2015-01-09/GENCODE19').query({
+            filters: [{
+              'and': [
+                ['feature__exact', 'gene'],
+                ['gene_status__exact', 'KNOWN'],
+                ['gene_type__exact', 'protein_coding'],
+                ['genomic_coordinates.start__gte', region.start],
+                ['genomic_coordinates.stop__lte', region.stop],
+                ['genomic_coordinates.chromosome__exact', chromosome]
+              ]
+            }]
+          })
+            .then(function(response) {
+              return {
+                genomic_coordinates: {
+                  start: start,
+                  stop: stop
+                },
+                chromosome: chromosome,
+                genes: response.results
+              }
+            });
         }
       }
     }
   }),
-
-  // mutation
-  mutation: new GraphQLObjectType({
-    name: 'Mutation',
-    fields: {
-      updateUser: {
-        type: userType,
-        args: {
-          id: {
-            name: 'id',
-            type: new GraphQLNonNull(GraphQLString)
-          },
-          name: {
-            name: 'name',
-            type: GraphQLString
-          }
-        },
-        resolve: (obj, {id, name}, source, fieldASTs) => co(function *() {
-          var projections = getProjection(fieldASTs);
-
-          yield User.update({
-            _id: id
-          }, {
-            $set: {
-              name: name
-            }
-          });
-
-          return yield User.findById(id, projections);
-        })
-      }
-    }
-  })
 });
 
-export var getProjection;
+function getRegion(start, stop) {
+  let regionOffset = 500000;
+  return {
+    start: parseInt(start) >= regionOffset ? (parseInt(start) - regionOffset).toString() : parseInt(start),
+    stop: (parseInt(stop) + regionOffset).toString()
+  }
+}
+
 export default schema;

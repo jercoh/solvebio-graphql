@@ -1,0 +1,1 @@
+export var authToken = 'my_token';
