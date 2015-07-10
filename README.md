@@ -1,6 +1,5 @@
 # graphql-server
-[ ![Codeship Status for RisingStack/graphql-server](https://codeship.com/projects/434da740-03bb-0133-00c5-7a6771ab2ee8/status?branch=master)](https://codeship.com/projects/89250)  
-GraphQL server with Mongoose (MongoDB) and Node.js  
+GraphQL server with SolveBio
 
 **Example GraphQL query:**
 ```
@@ -42,18 +41,14 @@ mutation updateUser($userId: String! $name: String!) {
 ## Used technologies
 
 * GraphQL
-* MongoDB with Mongoose
+* SolveBio-JS
 * Node/IO.js
 * Babel
-
-## How to start
-
-You need `iojs` or >= `Node.js` v0.12.x
 
 ### server
 ```
 npm install
-npm start
+npm run start
 
 ```
 
