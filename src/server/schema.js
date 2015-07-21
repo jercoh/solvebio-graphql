@@ -63,11 +63,15 @@ var schema = new GraphQLSchema({
           chromosome: {
             name: 'chromosome',
             type: new GraphQLNonNull(GraphQLString)
+          },
+          datasets: {
+            name: 'datasets',
+            type: new GraphQLList(GraphQLString)
           }
         },
-        resolve: (root, {start, stop, chromosome}) => {
+        resolve: (root, {start, stop, chromosome, datasets}) => {
           var region = getRegion(start, stop);
-          return SolveBio.Dataset('GENCODE/1.1.0-2015-01-09/GENCODE19').query({
+          return SolveBio.Dataset(datasets[0]).query({
             filters: [{
               'and': [
                 ['feature__exact', 'gene'],
