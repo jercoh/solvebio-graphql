@@ -64,14 +64,14 @@ var schema = new GraphQLSchema({
             name: 'chromosome',
             type: new GraphQLNonNull(GraphQLString)
           },
-          datasets: {
-            name: 'datasets',
-            type: new GraphQLList(GraphQLString)
+          dataset: {
+            name: 'dataset',
+            type: new GraphQLNonNull(GraphQLString)
           }
         },
-        resolve: (root, {start, stop, chromosome, datasets}) => {
+        resolve: (root, {start, stop, chromosome, dataset}) => {
           var region = getRegion(start, stop);
-          return SolveBio.Dataset(datasets[0]).query({
+          return SolveBio.Dataset(dataset).query({
             filters: [{
               'and': [
                 ['feature__exact', 'gene'],

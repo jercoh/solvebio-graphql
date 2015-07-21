@@ -7,8 +7,8 @@ request
   .get('http://localhost:3000/data')
   .query({
     query: `
-      query getGeneModule($chromosome: String!, $start: String!, $stop: String!, $datasets: [String]) {
-        geneModule(chromosome: $chromosome, start: $start, stop: $stop, datasets: $datasets) {
+      query getGeneModule($chromosome: String!, $start: String!, $stop: String!, $gencode: String!) {
+        geneModule(chromosome: $chromosome, start: $start, stop: $stop, dataset: $gencode) {
           overlapping_gene {
             gene_symbol
             ensembl_id_gene
@@ -17,9 +17,9 @@ request
               stop
             }
             strand
-            best_transcript {
+            best_transcript(dataset: $gencode) {
               ensembl_id_transcript
-              exons {
+              exons(dataset: $gencode) {
                 genomic_coordinates {
                   start
                   stop
@@ -42,7 +42,7 @@ request
       chromosome: '7',
       start: '117199644',
       stop: '117199647',
-      datasets: ['GENCODE/1.1.0-2015-01-09/GENCODE19']
+      gencode: 'GENCODE/1.1.0-2015-01-09/GENCODE19'
     }
   })
   .end(function (err, res) {

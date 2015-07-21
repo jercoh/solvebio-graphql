@@ -22,8 +22,14 @@ export var transcriptType = new GraphQLObjectType({
     exons: {
       type: new GraphQLList(exonType),
       description: 'Best Transcript of the Gene',
-      resolve: (transcript) => {
-        return SolveBio.Dataset('GENCODE/1.1.0-2015-01-09/GENCODE19').query({
+      args: {
+        dataset: {
+          name: 'dataset',
+          type: new GraphQLNonNull(GraphQLString)
+        }
+      },
+      resolve: (transcript, {dataset}) => {
+        return SolveBio.Dataset(dataset).query({
             filters: SolveBio.Filter({
               feature__exact: 'exon',
               ensembl_id_transcript__exact: transcript.ensembl_id_transcript
